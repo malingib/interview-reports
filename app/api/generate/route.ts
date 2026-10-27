@@ -99,8 +99,8 @@ export async function POST(request: Request) {
       const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 4096, thinkingConfig: { thinkingLevel: 'low' } } }),
-        signal: AbortSignal.timeout(50_000)
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 2048, thinkingConfig: { thinkingLevel: 'low' } } }),
+        signal: AbortSignal.timeout(55_000)
       });
       const data = await response.json();
       if (!response.ok) return NextResponse.json({ error: data?.error?.message || 'Gemini request failed.' }, { status: response.status === 429 ? 429 : 502 });
