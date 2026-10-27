@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { createHash, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -21,15 +20,6 @@ type Provider = 'openai' | 'gemini' | 'groq';
 type WindowCounter = { startedAt: number; count: number };
 const requestWindows = new Map<string, WindowCounter>();
 let dailyWindow = { day: new Date().toISOString().slice(0, 10), count: 0 };
-
-function isAuthorized(request: Request): boolean {
-  const expected = process.env.AI_ACCESS_TOKEN;
-  const supplied = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || '';
-  if (!expected || !supplied) return false;
-  const a = createHash('sha256').update(supplied).digest();
-  const b = createHash('sha256').update(expected).digest();
-  return timingSafeEqual(a, b);
-}
 
 function checkLimits(request: Request): { ok: boolean; retryAfter?: number } {
   const now = Date.now();
@@ -66,9 +56,6 @@ function resolveProvider(requested: 'platform' | Provider): Provider {
 export async function POST(request: Request) {
   if (process.env.AI_ENABLED !== 'true') {
     return NextResponse.json({ error: 'AI generation is disabled on this deployment until the operator enables and configures it.' }, { status: 503 });
-  }
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: 'Unauthorized. Enter the private AI access token in the app settings.' }, { status: 401 });
   }
   const contentLength = Number(request.headers.get('content-length') || '0');
   if (contentLength > 150_000) return NextResponse.json({ error: 'Request is too large. Reduce the source material and try again.' }, { status: 413 });
