@@ -121,10 +121,10 @@ export async function POST(request: Request) {
         : '';
     } else {
       const key = provider === 'openai' ? process.env.OPENAI_API_KEY : process.env.GROQ_API_KEY;
-      const providerName = provider === 'openai' ? 'OpenAI' : provider === 'groq' ? 'Groq' : 'Mistral';
-      if (!key) return NextResponse.json({ error: `${providerName} is not configured on this deployment. Add ${provider === 'mistral' ? 'MISTRAL_API_KEY' : provider === 'openai' ? 'OPENAI_API_KEY' : 'GROQ_API_KEY'} as a server environment variable.` }, { status: 503 });
-      const base = provider === 'openai' ? 'https://api.openai.com/v1' : provider === 'groq' ? 'https://api.groq.com/openai/v1' : 'https://api.mistral.ai/v1';
-      const model = provider === 'openai' ? (process.env.OPENAI_MODEL || 'gpt-4o-mini') : provider === 'groq' ? (process.env.GROQ_MODEL || 'llama-3.3-70b-versatile') : (process.env.MISTRAL_MODEL || 'mistral-small-latest');
+      const providerName = provider === 'openai' ? 'OpenAI' : 'Groq';
+      if (!key) return NextResponse.json({ error: `${providerName} is not configured on this deployment. Add ${provider === 'openai' ? 'OPENAI_API_KEY' : 'GROQ_API_KEY'} as a server environment variable.` }, { status: 503 });
+      const base = provider === 'openai' ? 'https://api.openai.com/v1' : 'https://api.groq.com/openai/v1';
+      const model = provider === 'openai' ? (process.env.OPENAI_MODEL || 'gpt-4o-mini') : (process.env.GROQ_MODEL || 'llama-3.3-70b-versatile');
       const response = await fetch(`${base}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
