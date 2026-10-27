@@ -21,7 +21,7 @@ export default function Home() {
   const [reportText, setReportText] = useState(starter);
   const [notice, setNotice] = useState('Your work is stored in this browser.');
   const [importError, setImportError] = useState('');
-  const [provider, setProvider] = useState<'platform' | 'gemini' | 'openai' | 'groq' | 'mistral' | 'mistral_api'>('platform');
+  const [provider] = useState<'mistral'>('mistral');
   const [generating, setGenerating] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -164,15 +164,9 @@ export default function Home() {
 
             <div className="ai-controls">
               <div className="card-heading"><div><span className="step">AI</span><h2>Generate report</h2></div><span className="small-muted">No automatic paid fallback</span></div>
-              <label htmlFor="provider">AI provider</label>
-              <select id="provider" className="title-input" value={provider} onChange={event => setProvider(event.target.value as typeof provider)}>
-                <option value="platform">Platform AI (configured free provider)</option>
-                <option value="gemini">Google Gemini</option>
-                <option value="openai">OpenAI API (not ChatGPT consumer sign-in)</option>
-                <option value="groq">Groq API</option>
-                <option value="mistral">Mistral Minx agent</option>\n                <option value="mistral_api">Mistral direct Chat Completions API</option>
-              </select>
-              <p className="small-muted">Access should be protected at the deployment layer. Provider credentials remain on the server and are never requested here. A free allowance depends on the provider and its current limits.</p>
+              <label>AI provider</label>
+              <div className="title-input" role="status" aria-label="Selected AI provider">Mistral Minx agent</div>
+              <p className="small-muted">Reports are generated using the configured Mistral Minx agent. Provider credentials remain on the server. Review sensitive information before sending source text for processing.</p>
               <button className="primary-button" disabled={generating || !sourceText.trim()} onClick={() => void generateReport()}><WandSparkles size={16} /> {generating ? 'Generating…' : 'Generate from source'}</button>
             </div>
 
