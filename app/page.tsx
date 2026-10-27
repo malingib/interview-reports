@@ -7,11 +7,11 @@ import { extractFileText, exportDocx, exportPdf } from '@/lib/document-tools';
 
 const starter = `# FIELD VISIT / INTERVIEW REPORT
 
-**SITE / FACILITY:** [Enter site or facility name]
-**DATE:** [Enter date if known]
-**DURATION:** [Enter duration if known]
+**SITE / FACILITY:** [Enter if known]
+**DATE:** [Enter if known]
+**DURATION:** [Enter if known]
 
-[Write a chronological narrative from arrival to departure. Describe the setting, observed activities, interactions, and relevant events in the order they occurred. Preserve exact quotations and supplied translations. Do not add details that are not in the source.]`;
+Write the report as a chronological narrative from arrival to departure. Describe the setting, observed activities, interactions, and important events in the order they occurred. Preserve exact quotations and any supplied translations. Do not add details that are not in the source.`;
 
 export default function Home() {
   const [reports, setReports] = useState<ReportRecord[]>([]);
