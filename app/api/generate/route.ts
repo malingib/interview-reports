@@ -93,8 +93,34 @@ export async function POST(request: Request) {
       const data = await response.json();
       if (!response.ok) return NextResponse.json({ error: data?.error?.message || 'Gemini request failed.' }, { status: response.status === 429 ? 429 : 502 });
       result = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('').trim() || '';
+    } else if (provider === 'mistral') {
+      const key = process.env.MISTRAL_API_KEY;
+      const agentId = process.env.MISTRAL_AGENT_ID;
+      if (!key) return NextResponse.json({ error: 'Mistral is not configured. Add MISTRAL_API_KEY as a server environment variable.' }, { status: 503 });
+      if (!agentId) return NextResponse.json({ error: 'Mistral agent is not configured. Add MISTRAL_AGENT_ID as a server environment variable.' }, { status: 503 });
+      const response = await fetch('https://api.mistral.ai/v1/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+        body: JSON.stringify({
+          agent_id: agentId,
+          agent_version: process.env.MISTRAL_AGENT_VERSION || 0,
+          instructions,
+          inputs: [{ role: 'user', content: source }],
+          completion_args: { temperature: 0.2, max_tokens: 4096 },
+          store: false
+        }),
+        signal: AbortSignal.timeout(50_000)
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        const message = data?.message || data?.detail || data?.error?.message;
+        return NextResponse.json({ error: message || 'Mistral Conversations API request failed.' }, { status: response.status === 429 ? 429 : 502 });
+      }
+      result = Array.isArray(data?.outputs)
+        ? data.outputs.filter((entry: { type?: string; content?: unknown }) => (entry.type === 'message.output' || !entry.type) && typeof entry.content === 'string').map((entry: { content: string }) => entry.content).join('\\n').trim()
+        : '';
     } else {
-      const key = provider === 'openai' ? process.env.OPENAI_API_KEY : provider === 'groq' ? process.env.GROQ_API_KEY : process.env.MISTRAL_API_KEY;
+      const key = provider === 'openai' ? process.env.OPENAI_API_KEY : process.env.GROQ_API_KEY;
       const providerName = provider === 'openai' ? 'OpenAI' : provider === 'groq' ? 'Groq' : 'Mistral';
       if (!key) return NextResponse.json({ error: `${providerName} is not configured on this deployment. Add ${provider === 'mistral' ? 'MISTRAL_API_KEY' : provider === 'openai' ? 'OPENAI_API_KEY' : 'GROQ_API_KEY'} as a server environment variable.` }, { status: 503 });
       const base = provider === 'openai' ? 'https://api.openai.com/v1' : provider === 'groq' ? 'https://api.groq.com/openai/v1' : 'https://api.mistral.ai/v1';
