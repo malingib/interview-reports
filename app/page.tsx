@@ -167,7 +167,7 @@ export default function Home() {
               <div className="card-heading"><div><span className="step">AI</span><h2>Generate report</h2></div><span className="small-muted">No automatic paid fallback</span></div>
               <label htmlFor="ai-access-token">Private AI access token</label>
               <input id="ai-access-token" className="title-input" type="password" autoComplete="off" value={aiAccessToken} onChange={event => setAiAccessToken(event.target.value)} placeholder="Enter the private token configured by the administrator" />
-              <p className="small-muted">This token is held only in this page's memory and is not saved in browser storage. Do not share it.</p>
+              <p className="small-muted">This token is held only in this page&apos;s memory and is not saved in browser storage. Do not share it.</p>
               <label htmlFor="provider">AI provider</label>
               <select id="provider" className="title-input" value={provider} onChange={event => setProvider(event.target.value as typeof provider)}>
                 <option value="platform">Platform AI (configured free provider)</option>
