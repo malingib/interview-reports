@@ -46,10 +46,10 @@ export async function POST(request: Request) {
     if (provider === 'gemini') {
       const key = process.env.GEMINI_API_KEY;
       if (!key) return NextResponse.json({ error: 'Gemini is not configured on this deployment. Add GEMINI_API_KEY on the server, or select another configured provider.' }, { status: 503 });
-      const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+      const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 8192 } }),
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 8192, thinkingConfig: { thinkingLevel: 'low' } } }),
         signal: AbortSignal.timeout(50_000)
       });
       const data = await response.json();
