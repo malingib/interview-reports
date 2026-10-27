@@ -21,8 +21,8 @@ Open http://localhost:3000.
 - Responsive report workspace and editable report content
 - Create, edit, save, reopen, and delete local reports
 - Paste notes/transcripts
-- Import TXT, Markdown, and CSV files (10 MB limit)
-- Export Markdown
+- Import TXT, Markdown, CSV, DOCX, and text-based PDF files (10 MB limit; scanned PDFs are not supported)
+- Export Markdown, DOCX, and PDF
 - Initial provider UX definitions for Platform AI, OpenAI/ChatGPT, Gemini, and Groq
 
 ## Provider limitations
