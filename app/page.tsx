@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FileText, Plus, ShieldCheck, Sparkles, Trash2, Download, LockKeyhole, CloudOff, Upload, Save } from 'lucide-react';
 import { db, type ReportRecord } from '@/lib/db';
+import { extractFileText, exportDocx, exportPdf } from '@/lib/document-tools';
 
 const starter = `# Interview report
 
@@ -96,24 +97,12 @@ export default function Home() {
   async function importSource(file?: File) {
     setImportError('');
     if (!file) return;
-    const allowed = /\.(txt|md|csv)$/i.test(file.name) || ['text/plain', 'text/csv', 'text/markdown'].includes(file.type);
-    if (!allowed) {
-      setImportError('This starter supports TXT, Markdown, and CSV. DOCX/PDF import is planned.');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setImportError('The file exceeds the 10 MB import limit.');
-      return;
-    }
     try {
-      const text = await file.text();
-      if (!text.trim()) setImportError('The selected file is empty.');
-      else {
-        setSourceText(previous => previous.trim() ? previous + '\n\n--- Imported: ' + file.name + ' ---\n\n' + text : text);
-        setNotice('Imported ' + file.name + '. Save the report to keep it in this browser.');
-      }
-    } catch {
-      setImportError('Could not read this file. Try saving it as UTF-8 text or CSV.');
+      const text = await extractFileText(file);
+      setSourceText(previous => previous.trim() ? previous + '\n\n--- Imported: ' + file.name + ' ---\n\n' + text : text);
+      setNotice('Imported ' + file.name + '. Save the report to keep it in this browser.');
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : 'Could not read this file.');
     }
     if (fileInput.current) fileInput.current.value = '';
   }
@@ -162,8 +151,8 @@ export default function Home() {
             <div className="card-heading"><div><span className="step">01</span><h2>Source material</h2></div><span className="small-muted">Paste notes or transcript</span></div>
             <div className="source-label-row">
               <label htmlFor="source">Interview notes, transcript, or existing report</label>
-              <button className="secondary-button import-button" onClick={() => fileInput.current?.click()}><Upload size={15} /> Import TXT / MD / CSV</button>
-              <input ref={fileInput} type="file" accept=".txt,.md,.csv,text/plain,text/markdown,text/csv" hidden onChange={event => void importSource(event.target.files?.[0])} />
+              <button className="secondary-button import-button" onClick={() => fileInput.current?.click()}><Upload size={15} /> Import document</button>
+              <input ref={fileInput} type="file" accept=".txt,.md,.csv,.docx,.pdf,text/plain,text/markdown,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden onChange={event => void importSource(event.target.files?.[0])} />
             </div>
             <textarea id="source" className="source-input" placeholder="Paste your interview notes or transcript here…" value={sourceText} onChange={event => setSourceText(event.target.value)} />
             <div className="source-meta">{sourceText.length.toLocaleString()} characters · Maximum imported file size 10 MB</div>
@@ -174,7 +163,7 @@ export default function Home() {
             <input id="title" className="title-input" value={title} onChange={event => setTitle(event.target.value)} />
             <label htmlFor="report">Report content</label>
             <textarea id="report" className="report-input" value={reportText} onChange={event => setReportText(event.target.value)} />
-            <div className="actions"><button className="primary-button" onClick={() => void save()}><Save size={16} /> Save locally</button><button className="secondary-button" onClick={downloadMarkdown}><Download size={16} /> Export draft (.md)</button><span className="save-notice" role="status">{notice}</span></div>
+            <div className="actions"><button className="primary-button" onClick={() => void save()}><Save size={16} /> Save locally</button><button className="secondary-button" onClick={downloadMarkdown}><Download size={16} /> Markdown</button><button className="secondary-button" onClick={() => void exportDocx(title, reportText)}><Download size={16} /> DOCX</button><button className="secondary-button" onClick={() => exportPdf(title, reportText)}><Download size={16} /> PDF</button><span className="save-notice" role="status">{notice}</span></div>
           </div>
 
           <div className="coming-soon"><div className="coming-icon"><Sparkles size={18} /></div><div><strong>Next up: AI provider connections and document exports</strong><p>We’ll add supported provider authorization, safe document import, and DOCX/PDF export. No cloud database or hidden paid fallback.</p></div></div>
