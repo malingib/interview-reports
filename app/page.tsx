@@ -23,7 +23,6 @@ export default function Home() {
   const [importError, setImportError] = useState('');
   const [provider, setProvider] = useState<'platform' | 'gemini' | 'openai' | 'groq'>('platform');
   const [generating, setGenerating] = useState(false);
-  const [aiAccessToken, setAiAccessToken] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
 
   async function refresh() {
@@ -98,7 +97,7 @@ export default function Home() {
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + aiAccessToken },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ provider, sourceText, title, currentReport: reportText, task: 'generate' })
       });
       const data = await response.json();
@@ -165,9 +164,6 @@ export default function Home() {
 
             <div className="ai-controls">
               <div className="card-heading"><div><span className="step">AI</span><h2>Generate report</h2></div><span className="small-muted">No automatic paid fallback</span></div>
-              <label htmlFor="ai-access-token">Private AI access token</label>
-              <input id="ai-access-token" className="title-input" type="password" autoComplete="off" value={aiAccessToken} onChange={event => setAiAccessToken(event.target.value)} placeholder="Enter the private token configured by the administrator" />
-              <p className="small-muted">This token is held only in this page&apos;s memory and is not saved in browser storage. Do not share it.</p>
               <label htmlFor="provider">AI provider</label>
               <select id="provider" className="title-input" value={provider} onChange={event => setProvider(event.target.value as typeof provider)}>
                 <option value="platform">Platform AI (configured free provider)</option>
@@ -175,7 +171,7 @@ export default function Home() {
                 <option value="openai">OpenAI API (not ChatGPT consumer sign-in)</option>
                 <option value="groq">Groq API</option>
               </select>
-              <p className="small-muted">The deployment administrator must configure provider credentials and the private access token on the server. Your provider API key is never requested here. A free allowance depends on the provider and its current limits.</p>
+              <p className="small-muted">Access is restricted by Vercel Authentication. Provider credentials remain on the server and are never requested here. A free allowance depends on the provider and its current limits.</p>
               <button className="primary-button" disabled={generating || !sourceText.trim()} onClick={() => void generateReport()}><WandSparkles size={16} /> {generating ? 'Generating…' : 'Generate from source'}</button>
             </div>
 
