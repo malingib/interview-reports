@@ -5,13 +5,14 @@ import { FileText, Plus, ShieldCheck, Sparkles, Trash2, Download, LockKeyhole, C
 import { db, type ReportRecord } from '@/lib/db';
 import { extractFileText, exportDocx, exportPdf } from '@/lib/document-tools';
 
-const starter = `# FIELD VISIT / INTERVIEW REPORT
+const starter = `HEALTH FACILITY VISIT
 
-**SITE / FACILITY:** [Enter if known]
-**DATE:** [Enter if known]
-**DURATION:** [Enter if known]
+[FACILITY NAME]
 
-Write the report as a chronological narrative from arrival to departure. Describe the setting, observed activities, interactions, and important events in the order they occurred. Preserve exact quotations and any supplied translations. Do not add details that are not in the source.`;
+DATE: [Enter date]
+DURATION: [Enter duration]
+
+Write a detailed first-person narrative in chronological order, from arrival to departure. Include the facility setting, activities, observations, conversations, patient or participant interactions, and relevant events as described in the source. Preserve meaningful times and exact quotations. Keep Swahili quotations and any supplied English translations together. Use complete, well-developed paragraphs rather than bullet points. Do not invent details, dialogue, names, dates, or conclusions.`;
 
 export default function Home() {
   const [reports, setReports] = useState<ReportRecord[]>([]);
