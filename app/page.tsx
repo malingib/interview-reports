@@ -5,34 +5,13 @@ import { FileText, Plus, ShieldCheck, Sparkles, Trash2, Download, LockKeyhole, C
 import { db, type ReportRecord } from '@/lib/db';
 import { extractFileText, exportDocx, exportPdf } from '@/lib/document-tools';
 
-const starter = `# Interview report
+const starter = `# FIELD VISIT / INTERVIEW REPORT
 
-## Executive summary
-To be completed from the source material.
+**SITE / FACILITY:** [Enter site or facility name]
+**DATE:** [Enter date if known]
+**DURATION:** [Enter duration if known]
 
-## Background and objectives
-Not provided.
-
-## Methodology
-Not provided.
-
-## Findings and observations
-Add source-supported findings here.
-
-## Evidence and quotations
-Add exact quotations or references to source passages.
-
-## Challenges
-Not provided.
-
-## Conclusions
-To be completed.
-
-## Recommendations
-To be completed based on verified findings.
-
-## Limitations and missing information
-List any gaps, contradictions, or uncertainties.`;
+[Write a chronological narrative from arrival to departure. Describe the setting, observed activities, interactions, and relevant events in the order they occurred. Preserve exact quotations and supplied translations. Do not add details that are not in the source.]`;
 
 export default function Home() {
   const [reports, setReports] = useState<ReportRecord[]>([]);
