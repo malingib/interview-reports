@@ -21,7 +21,7 @@ export default function Home() {
   const [reportText, setReportText] = useState(starter);
   const [notice, setNotice] = useState('Your work is stored in this browser.');
   const [importError, setImportError] = useState('');
-  const [provider, setProvider] = useState<'platform' | 'gemini' | 'openai' | 'groq'>('platform');
+  const [provider, setProvider] = useState<'platform' | 'gemini' | 'openai' | 'groq' | 'mistral'>('platform');
   const [generating, setGenerating] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -170,6 +170,7 @@ export default function Home() {
                 <option value="gemini">Google Gemini</option>
                 <option value="openai">OpenAI API (not ChatGPT consumer sign-in)</option>
                 <option value="groq">Groq API</option>
+                <option value="mistral">Mistral AI API</option>
               </select>
               <p className="small-muted">Access is restricted by Vercel Authentication. Provider credentials remain on the server and are never requested here. A free allowance depends on the provider and its current limits.</p>
               <button className="primary-button" disabled={generating || !sourceText.trim()} onClick={() => void generateReport()}><WandSparkles size={16} /> {generating ? 'Generating…' : 'Generate from source'}</button>
