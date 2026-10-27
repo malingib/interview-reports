@@ -117,7 +117,20 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: message || 'Mistral Conversations API request failed.' }, { status: response.status === 429 ? 429 : 502 });
       }
       result = Array.isArray(data?.outputs)
-        ? data.outputs.filter((entry: { type?: string; content?: unknown }) => (entry.type === 'message.output' || !entry.type) && typeof entry.content === 'string').map((entry: { content: string }) => entry.content).join('\\n').trim()
+        ? data.outputs
+            .filter((entry: { type?: string; content?: unknown }) => entry.type === 'message.output' || !entry.type)
+            .map((entry: { content?: unknown }) => {
+              if (typeof entry.content === 'string') return entry.content;
+              if (Array.isArray(entry.content)) {
+                return entry.content
+                  .map((chunk: { text?: unknown }) => typeof chunk?.text === 'string' ? chunk.text : '')
+                  .join('');
+              }
+              return '';
+            })
+            .filter(Boolean)
+            .join('\n')
+            .trim()
         : '';
     } else {
       const key = provider === 'openai' ? process.env.OPENAI_API_KEY : process.env.GROQ_API_KEY;
