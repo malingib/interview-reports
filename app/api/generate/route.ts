@@ -104,9 +104,7 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           agent_id: agentId,
           agent_version: process.env.MISTRAL_AGENT_VERSION || 0,
-          instructions,
-          inputs: [{ role: 'user', content: source }],
-          completion_args: { temperature: 0.2, max_tokens: 4096 },
+          inputs: [{ role: 'user', content: prompt }],
           store: false
         }),
         signal: AbortSignal.timeout(50_000)
