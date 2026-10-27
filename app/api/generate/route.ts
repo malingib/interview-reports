@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
@@ -17,6 +18,44 @@ const instructions = `Write a detailed field interview or observation report bas
 
 type Provider = 'openai' | 'gemini' | 'groq';
 
+type WindowCounter = { startedAt: number; count: number };
+const requestWindows = new Map<string, WindowCounter>();
+let dailyWindow = { day: new Date().toISOString().slice(0, 10), count: 0 };
+
+function isAuthorized(request: Request): boolean {
+  const expected = process.env.AI_ACCESS_TOKEN;
+  const supplied = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || '';
+  if (!expected || !supplied) return false;
+  const a = createHash('sha256').update(supplied).digest();
+  const b = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+function checkLimits(request: Request): { ok: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const day = new Date(now).toISOString().slice(0, 10);
+  if (dailyWindow.day !== day) dailyWindow = { day, count: 0 };
+  const maxDaily = Number.parseInt(process.env.AI_MAX_REQUESTS_PER_DAY || '20', 10);
+  if (dailyWindow.count >= (Number.isFinite(maxDaily) && maxDaily > 0 ? maxDaily : 20)) return { ok: false, retryAfter: 86400 };
+
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const ip = forwarded || request.headers.get('x-real-ip') || 'unknown';
+  const key = createHash('sha256').update(ip).digest('hex').slice(0, 24);
+  const windowMs = 15 * 60 * 1000;
+  let counter = requestWindows.get(key);
+  if (!counter || now - counter.startedAt >= windowMs) {
+    counter = { startedAt: now, count: 0 };
+    requestWindows.set(key, counter);
+  }
+  if (counter.count >= 5) return { ok: false, retryAfter: Math.max(1, Math.ceil((windowMs - (now - counter.startedAt)) / 1000)) };
+  counter.count += 1;
+  dailyWindow.count += 1;
+  if (requestWindows.size > 5000) {
+    for (const [k, v] of requestWindows) if (now - v.startedAt >= windowMs) requestWindows.delete(k);
+  }
+  return { ok: true };
+}
+
 function resolveProvider(requested: 'platform' | Provider): Provider {
   if (requested !== 'platform') return requested;
   const configured = process.env.AI_DEFAULT_PROVIDER;
@@ -28,6 +67,17 @@ export async function POST(request: Request) {
   if (process.env.AI_ENABLED !== 'true') {
     return NextResponse.json({ error: 'AI generation is disabled on this deployment until the operator enables and configures it.' }, { status: 503 });
   }
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized. Enter the private AI access token in the app settings.' }, { status: 401 });
+  }
+  const contentLength = Number(request.headers.get('content-length') || '0');
+  if (contentLength > 150_000) return NextResponse.json({ error: 'Request is too large. Reduce the source material and try again.' }, { status: 413 });
+
+  const limits = checkLimits(request);
+  if (!limits.ok) {
+    return NextResponse.json({ error: 'AI request limit reached. Try again after the limit resets.' }, { status: 429, headers: { 'Retry-After': String(limits.retryAfter || 60) } });
+  }
+
   let body: z.infer<typeof requestSchema>;
   try {
     body = requestSchema.parse(await request.json());
@@ -49,7 +99,7 @@ export async function POST(request: Request) {
       const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 8192, thinkingConfig: { thinkingLevel: 'low' } } }),
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 4096, thinkingConfig: { thinkingLevel: 'low' } } }),
         signal: AbortSignal.timeout(50_000)
       });
       const data = await response.json();
@@ -63,7 +113,7 @@ export async function POST(request: Request) {
       const response = await fetch(`${base}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-        body: JSON.stringify({ model, messages: [{ role: 'system', content: instructions }, { role: 'user', content: source }], temperature: 0.2, max_tokens: 8192 }),
+        body: JSON.stringify({ model, messages: [{ role: 'system', content: instructions }, { role: 'user', content: source }], temperature: 0.2, max_tokens: 4096 }),
         signal: AbortSignal.timeout(50_000)
       });
       const data = await response.json();
