@@ -28,6 +28,9 @@ function resolveProvider(requested: 'platform' | Provider): Provider {
 }
 
 export async function POST(request: Request) {
+  if (process.env.AI_ENABLED !== 'true') {
+    return NextResponse.json({ error: 'AI generation is disabled on this deployment until the operator enables and configures it.' }, { status: 503 });
+  }
   let body: z.infer<typeof requestSchema>;
   try {
     body = requestSchema.parse(await request.json());
