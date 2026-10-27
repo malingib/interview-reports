@@ -170,7 +170,7 @@ export default function Home() {
             <p>Organize interview notes and transcripts into a structured report. Keep control of your files and save drafts in this browser.</p>
           </div>
 
-          <div className="privacy-note"><ShieldCheck size={19} /><div><strong>Private by default</strong><span>Drafts stay in this browser. AI generation sends the source text to the selected provider through this app server. Do not submit sensitive information unless you are comfortable with the provider's terms.</span></div></div>
+          <div className="privacy-note"><ShieldCheck size={19} /><div><strong>Private by default</strong><span>Drafts stay in this browser. AI generation sends the source text to the selected provider through this app server. Do not submit sensitive information unless you are comfortable with the provider&apos;s terms.</span></div></div>
 
           <div className="editor-card">
             <div className="card-heading"><div><span className="step">01</span><h2>Source material</h2></div><span className="small-muted">Paste notes or transcript</span></div>
